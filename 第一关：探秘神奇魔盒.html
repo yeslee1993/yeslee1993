@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神奇魔盒</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+        body {
+            background: #f0f8ff;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .container {
+            width: 100%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 上方素材区 */
+        .top-box {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px #ccc;
+            text-align: center;
+        }
+        .title {
+            font-size: 16px;
+            color: #34495e;
+            margin-bottom: 15px;
+        }
+
+        /* 可拖拽元素容器 */
+        .drag-item {
+            width: 70px;
+            height: 70px;
+            margin: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            user-select: none;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .drag-item:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+
+        /* 花朵样式 */
+        .flower {
+            font-size: 42px;
+            color: #ff6b81;
+            line-height: 1;
+        }
+
+        /* 三角形样式 强化兼容性 */
+        .triangle {
+            width: 0;
+            height: 0;
+            border-left: 30px solid transparent;
+            border-right: 30px solid transparent;
+            border-bottom: 50px solid #48dbfb;
+        }
+
+        /* 数字输入区域 */
+        .input-area {
+            margin-top: 20px;
+        }
+        input {
+            width: 160px;
+            height: 38px;
+            padding: 0 10px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            outline: none;
+        }
+        button {
+            height: 38px;
+            padding: 0 14px;
+            margin-left: 8px;
+            background: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        /* 中间魔盒区域 */
+        .middle-box {
+            background: #fffef0;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 220px;
+            position: relative;
+        }
+        /* CSS绘制魔盒 */
+        .magic-box {
+            width: 180px;
+            height: 140px;
+            background: #9b59b6;
+            border-radius: 10px;
+            position: relative;
+            transition: all 0.5s ease;
+            z-index: 2;
+        }
+        .magic-box::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 32px;
+            background: #8e44ad;
+            border-radius: 8px 8px 0 0;
+        }
+        .magic-box::after {
+            content: "✨";
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 30px;
+        }
+        /* 魔盒动画 */
+        .magic-box.active {
+            animation: magicPulse 0.6s ease-in-out;
+        }
+        @keyframes magicPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); filter: brightness(1.3); }
+            100% { transform: scale(1); }
+        }
+        /* 魔法光晕 */
+        .magic-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 240px;
+            height: 240px;
+            background: radial-gradient(circle, rgba(155, 89, 182, 0.4) 0%, rgba(155, 89, 182, 0) 70%);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 1;
+        }
+        .magic-glow.active {
+            opacity: 1;
+            animation: glow 1s ease-in-out infinite;
+        }
+        @keyframes glow {
+            0%,100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+
+        /* 下方结果容器 统一样式 */
+        .result-item {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 70px;
+            height: 70px;
+            margin: 6px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .num-result {
+            margin-top: 20px;
+            font-size: 22px;
+            color: #e67e22;
+            font-weight: bold;
+            min-height: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>✨ 神奇魔盒 ✨</h1>
+    <div class="container">
+        <!-- 上方素材区 -->
+        <div class="top-box">
+            <div class="title">把图形、花朵拖到中间魔盒里</div>
+            <div class="drag-item" draggable="true" data-type="triangle">
+                <div class="triangle"></div>
+            </div>
+            <div class="drag-item" draggable="true" data-type="flower">
+                <div class="flower">🌸</div>
+            </div>
+
+            <div class="input-area">
+                <div class="title">输入数字</div>
+                <input type="number" id="numInput" placeholder="请输入数字">
+                <button onclick="getNumber()">确认</button>
+            </div>
+        </div>
+
+        <!-- 中间魔盒区域 -->
+        <div class="middle-box" id="magicBoxArea">
+            <div class="magic-glow" id="magicGlow"></div>
+            <div class="magic-box" id="magicBox"></div>
+        </div>
+
+        <!-- 下方结果区 -->
+        <div class="bottom-box">
+            <div class="title">魔盒输出</div>
+            <div id="shapeResult"></div>
+            <div class="num-result" id="numResult"></div>
+        </div>
+    </div>
+
+    <script>
+        const magicBoxArea = document.getElementById('magicBoxArea');
+        const magicBox = document.getElementById('magicBox');
+        const magicGlow = document.getElementById('magicGlow');
+        const shapeResult = document.getElementById('shapeResult');
+        const numInput = document.getElementById('numInput');
+        const numResult = document.getElementById('numResult');
+
+        // 拖拽绑定
+        const dragItems = document.querySelectorAll('.drag-item');
+        dragItems.forEach(item => {
+            item.addEventListener('dragstart', function(e) {
+                e.dataTransfer.setData('targetType', this.dataset.type);
+            });
+        });
+
+        // 魔盒放置区域
+        magicBoxArea.addEventListener('dragover', e => e.preventDefault());
+        magicBoxArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            const type = e.dataTransfer.getData('targetType');
+            clearAllResult();
+            // 删除原拖拽元素
+            const dragDom = e.target.closest('.drag-item');
+            if(dragDom) dragDom.remove();
+            triggerMagic();
+            setTimeout(() => {
+                createResult(type);
+            }, 500);
+        });
+
+        // 魔盒动画
+        function triggerMagic() {
+            magicBox.classList.add('active');
+            magicGlow.classList.add('active');
+            setTimeout(() => {
+                magicBox.classList.remove('active');
+                magicGlow.classList.remove('active');
+            }, 1000);
+        }
+
+        // 清空结果
+        function clearAllResult() {
+            shapeResult.innerHTML = '';
+            numResult.innerText = '';
+        }
+
+        // 生成对应图形/花朵（修复显示问题）
+        function createResult(type) {
+            for(let i = 0; i < 2; i++) {
+                let wrap = document.createElement('div');
+                wrap.className = 'result-item';
+                if (type === 'triangle') {
+                    let tri = document.createElement('div');
+                    tri.className = 'triangle';
+                    wrap.appendChild(tri);
+                } else {
+                    let flo = document.createElement('div');
+                    flo.className = 'flower';
+                    flo.innerText = '🌸';
+                    wrap.appendChild(flo);
+                }
+                shapeResult.appendChild(wrap);
+            }
+        }
+
+        // 数字处理
+        function getNumber() {
+            clearAllResult();
+            let val = Number(numInput.value);
+            if (isNaN(val)) return;
+            triggerMagic();
+            setTimeout(() => {
+                numResult.innerText = val * 2;
+            }, 500);
+        }
+    </script>
+</body>
+</html>
